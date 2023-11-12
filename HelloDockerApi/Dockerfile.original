@@ -1,0 +1,150 @@
+##See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
+#FROM node:18-alpine AS node-base
+#FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+#FROM amazoncorretto:17-alpine AS build
+#WORKDIR /app
+#EXPOSE 80
+#EXPOSE 443
+#
+#WORKDIR /app/HelloDockerApi/ClientApp
+#RUN npm ci && \
+	#npm run build
+#
+#FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+#WORKDIR /src
+#COPY ["HelloDockerApi.csproj", "HelloDockerApi/"]
+#RUN dotnet restore "HelloDockerApi/HelloDockerApi.csproj"
+#WORKDIR "/src/HelloDockerApi"
+#COPY . .
+#RUN dotnet build "HelloDockerApi.csproj" -c Release -o /app/build
+#
+#FROM build AS publish
+#RUN dotnet publish "HelloDockerApi.csproj" -c Release -o /app/publish /p:UseAppHost=false
+#
+#FROM base AS final
+#WORKDIR /app
+#COPY --from=publish /app/publish .
+#ENTRYPOINT ["dotnet", "HelloDockerApi.dll"]
+#
+## Stage 1: Build backend
+#FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-backend
+#WORKDIR /app
+#USER Administrator 
+#
+## Copy and restore as distinct layers
+#COPY ["HelloDockerApi.csproj", "HelloDockerApi/"]
+#RUN dotnet restore "HelloDockerApi/HelloDockerApi.csproj"
+#
+## Copy the main source code
+#COPY . .
+#
+## Build
+#RUN dotnet build "HelloDockerApi.csproj" -c Release -o /app/build
+#
+## Stage 2: Publish backend
+#FROM build-backend AS publish-backend
+#RUN dotnet publish -c Release --no-build -o /app/publish
+#
+## Stage 3: Build frontend
+#FROM node:14 AS build-frontend
+#WORKDIR /app/ClientApp
+#
+## Copy package files and install dependencies
+#COPY ClientApp/package*.json ./
+#RUN npm install
+#
+## Copy the main source code
+#COPY ClientApp/ .
+#
+## Build frontend
+#RUN npm run build
+#
+## Stage 4: Create final image
+#FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS final
+#WORKDIR /app
+#COPY --from=publish-backend /app/publish .
+#COPY --from=build-frontend /app/ClientApp/dist ./wwwroot
+#
+## Set the ASP.NET Core environment to production
+#ENV ASPNETCORE_ENVIRONMENT=Production
+#
+## Expose the port
+#EXPOSE 80
+#
+## Command to run the application
+#ENTRYPOINT ["dotnet", "HelloDockerApi.dll"]
+#
+#
+#
+#
+#
+#
+#FROM node:14-alpine AS node-base
+#FROM amazoncorretto:17-alpine AS build
+#WORKDIR /app/HelloDockerApi/ClientApp
+#COPY HelloDockerApi/ClientApp/package*.json ./
+#RUN npm ci && \
+    #npm run build
+#
+#FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+#
+#WORKDIR /app
+#EXPOSE 80
+#EXPOSE 443
+#
+#FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+#
+#WORKDIR /src
+#COPY ["HelloDockerApi.csproj", "HelloDockerApi/"]
+#RUN dotnet restore "HelloDockerApi/HelloDockerApi.csproj"
+#
+#WORKDIR "/src/HelloDockerApi"
+#COPY . .
+#RUN dotnet build "HelloDockerApi.csproj" -c Release -o /app/build
+#
+#FROM build AS publish
+#
+#RUN dotnet publish "HelloDockerApi.csproj" -c Release -o /app/publish /p:UseAppHost=false
+#
+#FROM base AS final
+#
+#WORKDIR /app
+#COPY --from=publish /app/publish .
+#
+#ENTRYPOINT ["dotnet", "HelloDockerApi.dll"]
+
+## Base Image for ASP.NET 6
+#FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
+#WORKDIR /app
+#
+## Copy csproj and restore as distinct layers
+#COPY ["HelloDockerApi.csproj", "HelloDockerApi/"]
+#RUN dotnet restore "HelloDockerApi/HelloDockerApi.csproj"
+#
+## Copy everything else and build
+#COPY . .
+#RUN ls -la
+#RUN dotnet publish "HelloDockerApi/HelloDockerApi.csproj" -c Release -o /app/publish
+#
+## Base Image for Node.js (for Vue 3)
+#FROM node:16 AS node-build
+#WORKDIR /app
+#
+## Copy Vue 3 frontend and install dependencies
+#COPY ["ClientApp/", "ClientApp/"]
+#RUN cd ClientApp && npm install
+#
+## Build Vue 3 Frontend with Vite
+#RUN cd ClientApp && npm run build
+#
+## Final Image for Running the Application
+#FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS final
+#WORKDIR /app
+#COPY --from=build-env /app/publish .
+#
+## Copy built Vue app to wwwroot
+#COPY --from=node-build /app/ClientApp/dist ./wwwroot
+#
+## Set the Entry Point
+#ENTRYPOINT ["dotnet", "HelloDockerApi.dll"]
+#
